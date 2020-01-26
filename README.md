@@ -30,8 +30,16 @@ After making your own `.env` file (using [`example.env`](example.env) as an exam
 
 This process assumes that you have a `~/.docker/config.json` file on the host system with the appropriate credentials to log into [Docker Hub](https://hub.docker.com/).
 
+To test:
+
 ```bash
-make build
+make test
+```
+
+To publish:
+
+```bash
+make publish
 ```
 
 # Why am I doing this?
