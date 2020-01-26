@@ -21,13 +21,33 @@ export DOCKER_CLI_EXPERIMENTAL=enabled
 EOF
 SCRIPT
 
+$build_script = <<SCRIPT
+docker buildx install
+docker run --rm --privileged docker/binfmt:$1
+cat /proc/sys/fs/binfmt_misc/qemu-aarch64
+docker buildx create --name vagrant-docker-buildx-bind9
+docker buildx use vagrant-docker-buildx-bind9
+docker buildx inspect --bootstrap
+if [ "$4" = "YES" ]
+then
+  echo "*** Publishing Image $2/$3 ***"
+  docker buildx build /vagrant/alpine --platform linux/arm64,linux/amd64 -t $2/$3:latest        -t $2/$3:`date +%Y%m%d`-alpine --no-cache --push
+  docker buildx build /vagrant/ubuntu --platform linux/arm64,linux/amd64 -t $2/$3:latest-ubuntu -t $2/$3:`date +%Y%m%d`-ubuntu --no-cache --push
+  docker buildx imagetools inspect $1/$2
+else
+  echo "*** Not Publishing Image $2/$3 ***"
+  docker buildx build /vagrant/alpine --platform linux/arm64,linux/amd64 -t $2/$3:latest        -t $2/$3:`date +%Y%m%d`-alpine --no-cache
+  docker buildx build /vagrant/ubuntu --platform linux/arm64,linux/amd64 -t $2/$3:latest-ubuntu -t $2/$3:`date +%Y%m%d`-ubuntu --no-cache
+fi
+docker system prune -a -f
+SCRIPT
+
 Vagrant.configure("2") do |config|
   config.ssh.insert_key = false
   config.vm.box = "generic/ubuntu1804"
   config.vm.network "private_network", type: "dhcp"
   config.vm.hostname = "vagrant-docker-buildx-bind9"
   config.vm.synced_folder ".", "/vagrant", disabled: false
-  #config.vm.synced_folder "~/.docker/", "/root/.docker/", disabled: false
   config.vm.synced_folder "~/.docker/", "/root/.docker/", type: "rsync", rsync__auto: false
   config.vm.provider "virtualbox" do |vb|
     vb.name = "vagrant-docker-buildx-bind9"
@@ -41,11 +61,5 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: $set_environment_variables, run: "always"
   config.vm.provision "docker" do |docker|
   end
-  config.vm.provision "shell", inline: "docker buildx install && docker run --rm --privileged docker/binfmt:$1 && cat /proc/sys/fs/binfmt_misc/qemu-aarch64", run: "always", args: "#{ENV['BINFMT']}"
-  config.vm.provision "shell", inline: "docker buildx create --name vagrant-docker-buildx-bind9 && docker buildx use vagrant-docker-buildx-bind9 && docker buildx inspect --bootstrap", run: "always"
-  config.vm.provision "shell", inline: "docker buildx build /vagrant/alpine --platform linux/arm64,linux/amd64 -t $1/$2:latest        -t $1/$2:`date +%Y%m%d`-alpine --no-cache --push", run: "always", args: "#{ENV['REGISTRY_ACCOUNT']} #{ENV['IMAGE_NAME']}"
-  config.vm.provision "shell", inline: "docker buildx build /vagrant/ubuntu --platform linux/arm64,linux/amd64 -t $1/$2:latest-ubuntu -t $1/$2:`date +%Y%m%d`-ubuntu --no-cache --push", run: "always", args: "#{ENV['REGISTRY_ACCOUNT']} #{ENV['IMAGE_NAME']}"
-  config.vm.provision "shell", inline: "docker buildx imagetools inspect $1/$2", run: "always", args: "#{ENV['REGISTRY_ACCOUNT']} #{ENV['IMAGE_NAME']}"
-  config.vm.provision "shell", inline: "docker system prune -a -f", run: "always"
-  config.vm.provision "shell", inline: "shutdown -h now", run: "always"
+  config.vm.provision "shell", inline: $build_script, args: ["#{ENV['BINFMT']}", "#{ENV['REGISTRY_ACCOUNT']}", "#{ENV['IMAGE_NAME']}", "#{ENV['PUBLISH_IMAGE']}"], run: "always"
 end

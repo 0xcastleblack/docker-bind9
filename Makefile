@@ -20,28 +20,43 @@ export
 .PHONY: usage
 usage:
 	$(info    Usage:)
-	$(info      build: Builds and publishes the Docker image)
+	$(info      publish: Builds and publishes the Docker image)
+	$(info      fullpublish: clean + publish)
+	$(info      test: Builds the Docker image)
+	$(info      fulltest: clean + test)
 	$(info      clean: Destroys the Vagrant box)
-	$(info      stop: Halts the Vagrant box)
-	$(info      rebuild: clean + build)
-	$(info      debug: ssh into Vagrant box, if running)
-
-.PHONY: build
-build:
-	vagrant halt
-	vagrant up
-
-.PHONY: clean
-clean:
-	vagrant destroy -f
-
-.PHONY: rebuild
-rebuild: clean build
+	$(info      halt: Halts the Vagrant box)
 
 .PHONY: halt
 halt:
 	vagrant halt
 
-.PHONY: debug
-debug:
-	vagrant ssh
+.PHONY: clean
+clean:
+	vagrant destroy -f
+
+.PHONY: publish
+publish:
+	vagrant halt
+	PUBLISH_IMAGE=YES vagrant up
+	vagrant halt
+
+.PHONY: fullpublish
+fullpublish:
+	vagrant destroy -f
+	vagrant halt
+	PUBLISH_IMAGE=YES vagrant up
+	vagrant halt
+
+.PHONY: test
+test:
+	vagrant halt
+	PUBLISH_IMAGE=NO vagrant up
+	vagrant halt
+
+.PHONY: fulltest
+fulltest:
+	vagrant destroy -f
+	vagrant halt
+	PUBLISH_IMAGE=NO vagrant up
+	vagrant halt
