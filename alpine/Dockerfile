@@ -16,12 +16,15 @@ FROM alpine:3.6.5
 
 LABEL maintainer="shawn@castleblack.us"
 
-ENV BIND_USER=bind \
-    BIND_VERSION=9.11.6_p1 \
-    ALPINE_SUFFIX=r1
+ENV BIND_VERSION=9.11.6_p1 \
+    BIND_ALPINE_SUFFIX=r1 \
+    DUMB_INIT_VERSION=1.2.0 \
+    DUMB_INIT_ALPINE_SUFFIX=r0
 
-RUN apk update && apk --no-cache add bind=${BIND_VERSION}-${ALPINE_SUFFIX}
+RUN apk update && apk --no-cache add bind=${BIND_VERSION}-${BIND_ALPINE_SUFFIX} dumb-init=${DUMB_INIT_VERSION}-${DUMB_INIT_ALPINE_SUFFIX}
 
 EXPOSE 53/udp 53/tcp
+
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 CMD ["/usr/sbin/named"]
