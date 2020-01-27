@@ -37,7 +37,13 @@ then
 else
   echo "*** Not Publishing Image $2/$3 ***"
   docker buildx build /vagrant/alpine --platform linux/arm64,linux/amd64 -t $2/$3:latest        -t $2/$3:`date +%Y%m%d`-alpine --no-cache
+  skopeo copy docker://$3:latest        oci:$3:latest
+  oci-image-tool validate --type imageLayout --ref latest $3:latest
+  skopeo delete oci:$3:latest
   docker buildx build /vagrant/ubuntu --platform linux/arm64,linux/amd64 -t $2/$3:latest-ubuntu -t $2/$3:`date +%Y%m%d`-ubuntu --no-cache
+  skopeo copy docker://$3:latest-ubuntu oci:$3:latest-ubuntu
+  oci-image-tool validate --type imageLayout --ref latest $3:latest-ubuntu
+  skopeo delete oci:$3:latest-ubuntu
 fi
 docker system prune -a -f
 SCRIPT
@@ -58,6 +64,7 @@ Vagrant.configure("2") do |config|
     vm.vmx["memsize"] = "2048"
     vm.vmx["numvcpus"] = "2"
   end
+  config.vm.provision "shell", inline: "apt-get update && apt-get install -y software-properties-common && add-apt-repository -y ppa:projectatomic/ppa && apt update && apt-get install -y skopeo && curl http://launchpadlibrarian.net/293283402/oci-image-tool_1.0.0~rc2+dfsg-1_amd64.deb -o oci-image-tool.deb && dpkg -i oci-image-tool.deb"
   config.vm.provision "shell", inline: $set_environment_variables, run: "always"
   config.vm.provision "docker" do |docker|
   end
