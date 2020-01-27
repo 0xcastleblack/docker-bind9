@@ -20,35 +20,43 @@ Dockerized [BIND](https://www.isc.org/bind/) server for AMD64, ARM64.
 
 Built using [Buildx](https://docs.docker.com/buildx/working-with-buildx/).
 
-# Requirements
+# Running
+
+## Docker Example
+
+WIP
+
+# Building
+
+## Requirements
 
 + [Vagrant](https://www.vagrantup.com/)
 
-# Example
+## Example
 
 After making your own `.env` file (using [`example.env`](example.env) as an example), run the following to build and publish the Docker images.
 
 This process assumes that you have a `~/.docker/config.json` file on the host system with the appropriate credentials to log into [Docker Hub](https://hub.docker.com/).
 
-To test:
+Testing:
 
 ```bash
 make test
 ```
 
-To publish:
+Publishing:
 
 ```bash
 make publish
 ```
 
-# Why am I doing this?
+## Why I Am Doing This
 
-I'm not a Docker expert nor a Vagrant expert, but I am migrating what I do have to [Podman](https://podman.io/) and [Buildah](https://buildah.io/).
+I'm not a Docker expert nor a Vagrant expert, but I am migrating what I do have, on the container side of things, to [Podman](https://podman.io/) and [Buildah](https://buildah.io/).
 
 Those tools do *not* support, as of right now, cross building. Docker Buildx, on the otherhand, does.
 
-So with that being the case, I didn't want to remove what I have from my workstation, so I put together a [`Vagrantfile`](Vagrantfile) that will do it for me.
+So with that being the case, I didn't want to remove what I have from my workstation, so I put together a [`Vagrantfile`](Vagrantfile) that will host the image builds.
 
 # Public Repository
 
